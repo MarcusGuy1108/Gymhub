@@ -32,7 +32,7 @@ GitHub Actions builds an unsigned `GymHub.ipa` on a Mac runner, so you don't nee
 
 Sign it with your developer certificate and provisioning profile before installing, using Sideloadly, ESign or Feather. The bundle ID is `com.gymhub.app`, and your signer can change it to match your profile.
 
-To build a new version, push a tag such as `v1.0.1`, or open **Actions → iOS .ipa → Run workflow**. The workflow is in `.github/workflows/ios-ipa.yml`.
+A new build runs whenever app code changes on `main`, takes about 15–20 minutes, and becomes the latest release. You can also start one from **Actions → iOS .ipa → Run workflow**. The workflow is in `.github/workflows/ios-ipa.yml`.
 
 For TestFlight or the App Store, use [EAS Build](https://docs.expo.dev/build/introduction/) instead.
 

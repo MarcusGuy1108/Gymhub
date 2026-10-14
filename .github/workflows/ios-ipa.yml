@@ -1,13 +1,23 @@
 # Builds an unsigned GymHub.ipa on a macOS runner and attaches it to a GitHub
 # release. Sign it with your own certificate before installing.
 #
-# Trigger: push a tag like v1.0.1, or use "Run workflow" in the Actions tab.
+# Runs when app code changes on main (or this branch), on v* tags, or from
+# "Run workflow" in the Actions tab. Builds from main become the latest release.
 name: iOS .ipa
 
 on:
   workflow_dispatch:
   push:
+    branches: [main, claude/ios-ipa-build]
     tags: ['v*']
+    paths:
+      - 'src/**'
+      - 'assets/**'
+      - 'app.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'metro.config.js'
+      - '.github/workflows/ios-ipa.yml'
 
 permissions:
   contents: write
@@ -95,8 +105,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if [ "$GITHUB_REF_TYPE" = tag ]; then TAG="$GITHUB_REF_NAME"; else TAG="build-$GITHUB_RUN_NUMBER"; fi
-          gh release create "$TAG" GymHub.ipa \
+          VERSION=$(node -p "require('./app.json').expo.version")
+          if [ "$GITHUB_REF_TYPE" = tag ]; then TAG="$GITHUB_REF_NAME"; else TAG="v$VERSION-build.$GITHUB_RUN_NUMBER"; fi
+          # Only main and tags become "latest"; other branches publish pre-releases.
+          if [ "$GITHUB_REF_TYPE" = tag ] || [ "$GITHUB_REF_NAME" = main ]; then KIND=--latest; else KIND=--prerelease; fi
+          gh release create "$TAG" GymHub.ipa $KIND \
             --target "$GITHUB_SHA" \
             --title "GymHub $TAG" \
-            --notes "Unsigned iOS build of ${GITHUB_SHA::7}. Sign it with your own certificate (for example with Sideloadly, ESign or Feather) before installing. Bundle ID: com.gymhub.app."
+            --notes "Unsigned iOS build of ${GITHUB_SHA::7} ($GITHUB_REF_NAME). Sign it with your own certificate (for example with Sideloadly, ESign or Feather) before installing. Bundle ID: com.gymhub.app."
