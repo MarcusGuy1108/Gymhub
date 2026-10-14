@@ -26,7 +26,15 @@ Type or dictate what you're doing between sets — *"bench 80kg x 8"*, *"current
    ```
 3. Install **Expo Go** from the App Store, then scan the QR code in the terminal with the iPhone camera. Your phone and computer need to be on the same Wi-Fi. If they can't be, use `npx expo start --tunnel`.
 
-To make it a standalone app on your home screen that runs without the computer, build it with [EAS Build](https://docs.expo.dev/build/introduction/) and install it through TestFlight. That needs an Apple Developer account ($99/year).
+## Install as a standalone app (.ipa)
+
+GitHub Actions builds an unsigned `GymHub.ipa` on a Mac runner, so you don't need a Mac yourself. Download it from the [latest release](https://github.com/MarcusGuy1108/Gymhub/releases/latest), or directly from <https://github.com/MarcusGuy1108/Gymhub/releases/latest/download/GymHub.ipa>.
+
+Sign it with your developer certificate and provisioning profile before installing, using Sideloadly, ESign or Feather. The bundle ID is `com.gymhub.app`, and your signer can change it to match your profile.
+
+To build a new version, push a tag such as `v1.0.1`, or open **Actions → iOS .ipa → Run workflow**. The workflow is in `.github/workflows/ios-ipa.yml`.
+
+For TestFlight or the App Store, use [EAS Build](https://docs.expo.dev/build/introduction/) instead.
 
 ## Turn on the AI coach
 

@@ -1,0 +1,102 @@
+# Builds an unsigned GymHub.ipa on a macOS runner and attaches it to a GitHub
+# release. Sign it with your own certificate before installing.
+#
+# Trigger: push a tag like v1.0.1, or use "Run workflow" in the Actions tab.
+name: iOS .ipa
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ios-ipa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build unsigned .ipa
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      CI: 1
+      EXPO_NO_TELEMETRY: 1
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Select newest Xcode 26
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test and typecheck
+        run: |
+          npm test -- --ci
+          npm run typecheck
+
+      - name: Generate the iOS project
+        # ios/ isn't committed (Continuous Native Generation); this also runs pod install.
+        run: |
+          command -v pod >/dev/null || brew install cocoapods
+          pod --version
+          npx expo prebuild --platform ios
+
+      - name: Build
+        run: |
+          set -o pipefail
+          if command -v xcbeautify >/dev/null; then FMT="xcbeautify --quieter"; else FMT=cat; fi
+          xcodebuild archive \
+            -workspace ios/GymHub.xcworkspace \
+            -scheme GymHub \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/GymHub.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            2>&1 | tee "$RUNNER_TEMP/xcodebuild.log" | $FMT
+
+      - name: Upload build log
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: xcodebuild-log
+          path: ${{ runner.temp }}/xcodebuild.log
+          if-no-files-found: ignore
+
+      - name: Package .ipa
+        run: |
+          APP="$RUNNER_TEMP/GymHub.xcarchive/Products/Applications/GymHub.app"
+          test -f "$APP/main.jsbundle" || { echo "JS bundle missing from $APP"; exit 1; }
+          mkdir -p "$RUNNER_TEMP/ipa/Payload"
+          cp -R "$APP" "$RUNNER_TEMP/ipa/Payload/"
+          (cd "$RUNNER_TEMP/ipa" && zip -qry "$GITHUB_WORKSPACE/GymHub.ipa" Payload)
+          ls -lh GymHub.ipa
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: GymHub-ipa
+          path: GymHub.ipa
+          if-no-files-found: error
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then TAG="$GITHUB_REF_NAME"; else TAG="build-$GITHUB_RUN_NUMBER"; fi
+          gh release create "$TAG" GymHub.ipa \
+            --target "$GITHUB_SHA" \
+            --title "GymHub $TAG" \
+            --notes "Unsigned iOS build of ${GITHUB_SHA::7}. Sign it with your own certificate (for example with Sideloadly, ESign or Feather) before installing. Bundle ID: com.gymhub.app."
