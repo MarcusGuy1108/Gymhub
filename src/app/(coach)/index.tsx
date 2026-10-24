@@ -66,7 +66,7 @@ export default function CoachScreen() {
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const listRef = useRef<FlatList<ChatMessage>>(null);
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -121,7 +121,7 @@ export default function CoachScreen() {
         keyboardDismissMode="interactive"
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
         ListEmptyComponent={<Welcome onPick={(t) => { setText(t); inputRef.current?.focus(); }} />}
-        ListFooterComponent={busy ? <TypingBubble /> : null}
+        ListFooterComponent={busy ? <TypingBubble /> : undefined}
       />
 
       <View style={[styles.composerWrap, { paddingBottom: bottomPad }]}>

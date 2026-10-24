@@ -69,7 +69,7 @@ On a treadmill, *"at 5k"* means a speed of 5 km/h. *"Ran 5k"* means a distance.
 
 ## How it's built
 
-[Expo](https://expo.dev) SDK 57 with React Native and TypeScript, and expo-router for navigation (native iOS tabs).
+[Expo](https://expo.dev) SDK 58 (React Native 0.88) with TypeScript, and expo-router for navigation (native iOS tabs).
 
 ```
 src/
