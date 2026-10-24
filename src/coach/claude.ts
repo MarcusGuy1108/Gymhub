@@ -180,7 +180,7 @@ function textOf(message: BetaMessage): string {
 }
 
 /** Server-side refusal fallback is available on these models. */
-function supportsFallback(model: ModelId): boolean {
+function supportsFallback(model: Exclude<ModelId, 'apple'>): boolean {
   return model === 'claude-opus-5-5' || model === 'claude-sonnet-5-5';
 }
 
@@ -197,7 +197,7 @@ export class ClaudeTurnError extends Error {
 
 export async function runClaudeTurn(opts: {
   apiKey: string;
-  model: ModelId;
+  model: Exclude<ModelId, 'apple'>;
   history: BetaMessageParam[];
   appState: string;
   userText: string;

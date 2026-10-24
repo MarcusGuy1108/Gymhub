@@ -29,7 +29,8 @@ concurrency:
 jobs:
   build:
     name: Build unsigned .ipa
-    runs-on: macos-26
+    # expo-foundation-models uses iOS 27 APIs, so it needs the Xcode 27 SDK.
+    runs-on: xcode-27
     timeout-minutes: 60
     env:
       CI: 1
@@ -37,11 +38,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Select newest Xcode 26
-        run: |
-          XCODE=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
-          sudo xcode-select -s "$XCODE"
-          xcodebuild -version
+      - name: Xcode version
+        run: xcodebuild -version
 
       - uses: actions/setup-node@v7
         with:

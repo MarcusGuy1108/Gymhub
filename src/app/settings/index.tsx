@@ -49,11 +49,11 @@ export default function SettingsScreen() {
       contentInsetAdjustmentBehavior="automatic"
       keyboardShouldPersistTaps="handled"
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + BottomTabInset + Spacing.four }]}>
-      <SectionHeader title="Claude coach" />
+      <SectionHeader title="Coach" />
       <Card>
         <ThemedText type="heading">Anthropic API key</ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
-          With a key, the Coach understands anything you say and gives smarter suggestions. Without one it uses the built-in offline parser. The key is stored in your iPhone’s Keychain and only sent to Anthropic.
+          Only needed for the Claude models below. The key is stored in your iPhone’s Keychain and only sent to Anthropic.
         </ThemedText>
         {savedKey ? (
           <View style={styles.row}>

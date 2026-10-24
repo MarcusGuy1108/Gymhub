@@ -87,6 +87,7 @@ export default function CoachScreen() {
   };
 
   const modelLabel = MODELS.find((m) => m.id === model)?.label ?? model;
+  const needsKey = model !== 'apple' && hasKey === false;
   const bottomPad = keyboard ? Spacing.two : insets.bottom + BottomTabInset + Spacing.two;
 
   return (
@@ -94,9 +95,9 @@ export default function CoachScreen() {
       <View style={[styles.header, { paddingTop: insets.top + Spacing.two }]}>
         <View style={styles.flex}>
           <ThemedText type="title">Coach</ThemedText>
-          <Pressable onPress={() => hasKey === false && router.navigate('/settings')}>
-            <ThemedText type="small" themeColor={hasKey === false ? 'accent' : 'textSecondary'}>
-              {hasKey === false ? 'Offline mode · tap to add a Claude API key →' : hasKey ? `Claude ${modelLabel}` : ' '}
+          <Pressable onPress={() => needsKey && router.navigate('/settings')}>
+            <ThemedText type="small" themeColor={needsKey ? 'accent' : 'textSecondary'}>
+              {needsKey ? 'Offline mode · tap to add a Claude API key →' : model === 'apple' ? 'Apple Intelligence · on-device' : hasKey ? modelLabel : ' '}
             </ThemedText>
           </Pressable>
         </View>

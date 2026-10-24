@@ -10,7 +10,7 @@ Type or dictate what you're doing between sets — *"bench 80kg x 8"*, *"current
 - **Live cardio.** Send a status update mid-treadmill and it builds a timeline (0–10 min at 10% / 5 km/h, then 12%…), with estimated distance and calories. Quick-reply chips (*Incline 13%*, *Speed 5.5*, *Done*) let you update with one tap.
 - **Workout tab.** A Hevy-style manual logger with exercise cards, an add-set row, cardio cards with live update and finish controls, and a session timer.
 - **History and progress.** Every session, plus per-exercise history with best estimated 1RM, heaviest set and a progress chart.
-- **Works offline.** Without an API key or a signal, a built-in parser handles the common phrasings. With a key, Claude handles everything else ("did 3 rounds of 10 min at 5k then 2 min at 6.5k").
+- **Free, private AI by default.** Apple Intelligence's on-device model reads your messages, so nothing leaves the phone and it works offline. You can switch to Claude in Settings for smarter coaching. If neither is available, a built-in parser handles the common phrasings.
 - **Hands-free.** Tap the 🎤 on the iOS keyboard to talk, and turn on *Read replies aloud* in Settings.
 - kg or lb, km or miles, light and dark mode. Data stays on your phone and can be exported as JSON.
 
@@ -36,11 +36,15 @@ A new build runs whenever app code changes on `main`, takes about 15–20 minute
 
 For TestFlight or the App Store, use [EAS Build](https://docs.expo.dev/build/introduction/) instead.
 
-## Turn on the AI coach
+## Choosing the AI coach
+
+**Apple Intelligence** is the default. It runs on the iPhone, costs nothing and needs no account. It needs an iPhone 15 Pro or newer on iOS 26 or later, with Apple Intelligence switched on in Settings. Expo Go can't run it, so use the .ipa build. It's good at turning what you say into log entries. Next-set and cardio tips come from GymHub's built-in rules.
+
+To use **Claude** instead:
 
 1. Create an API key at [console.anthropic.com](https://console.anthropic.com/settings/keys). Usage is billed to your Anthropic account.
 2. In the app, open **Settings → Anthropic API key**, paste it and tap **Save**.
-3. Choose a model. **Opus 5.5** is the default and the smartest; **Sonnet 5.5** and **Haiku 5.5** are faster and cheaper.
+3. Under **Model**, pick **Claude Opus 5.5** (smartest), **Sonnet 5.5** or **Haiku 5.5** (faster and cheaper).
 
 The key is stored in the iOS Keychain and sent only to Anthropic's API, directly from your phone. This is fine for a personal app. If you ever publish the app for other people, put a small server between the app and the API so the key never ships inside the app.
 

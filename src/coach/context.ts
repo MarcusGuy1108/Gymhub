@@ -34,7 +34,7 @@ function describeSession(s: Session, prefs: Prefs, detailed: boolean): string[] 
  * Snapshot of the user's log that rides along with each message, so Claude
  * always sees current state without extra tool calls.
  */
-export function buildAppState(state: WorkoutState, prefs: Prefs, now = Date.now()): string {
+export function buildAppState(state: WorkoutState, prefs: Prefs, now = Date.now(), recentCount = 6): string {
   const speed = prefs.distanceUnit === 'mi' ? 'mph' : 'km/h';
   const lines: string[] = [
     `Now: ${formatDate(now)}, ${formatTime(now)}`,
@@ -50,7 +50,7 @@ export function buildAppState(state: WorkoutState, prefs: Prefs, now = Date.now(
   } else {
     lines.push('No active session (one starts automatically when something is logged).');
   }
-  const recent = state.sessions.filter((s) => s.id !== active?.id).slice(0, 6);
+  const recent = state.sessions.filter((s) => s.id !== active?.id).slice(0, recentCount);
   if (recent.length) {
     lines.push('Recent sessions:');
     for (const s of recent) {

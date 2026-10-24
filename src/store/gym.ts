@@ -17,12 +17,13 @@ import {
   type LogChip,
 } from '@/lib/workout';
 
-export type ModelId = 'claude-opus-5-5' | 'claude-sonnet-5-5' | 'claude-haiku-5-5';
+export type ModelId = 'apple' | 'claude-opus-5-5' | 'claude-sonnet-5-5' | 'claude-haiku-5-5';
 
 export const MODELS: { id: ModelId; label: string; blurb: string }[] = [
-  { id: 'claude-opus-5-5', label: 'Opus 5.5', blurb: 'Smartest coaching (default)' },
-  { id: 'claude-sonnet-5-5', label: 'Sonnet 5.5', blurb: 'Faster, cheaper' },
-  { id: 'claude-haiku-5-5', label: 'Haiku 5.5', blurb: 'Fastest, cheapest' },
+  { id: 'apple', label: 'Apple Intelligence', blurb: 'On-device, free and private (default)' },
+  { id: 'claude-opus-5-5', label: 'Claude Opus 5.5', blurb: 'Smartest coaching · needs an API key' },
+  { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5', blurb: 'Faster, cheaper' },
+  { id: 'claude-haiku-5-5', label: 'Claude Haiku 5.5', blurb: 'Fastest, cheapest' },
 ];
 
 export interface ChatMessage {
@@ -31,8 +32,8 @@ export interface ChatMessage {
   text: string;
   at: number;
   chips?: LogChip[];
-  /** Who wrote a coach message: Claude, or the built-in offline parser */
-  source?: 'claude' | 'offline';
+  /** Who wrote a coach message: Claude, Apple's on-device model, or the built-in offline parser */
+  source?: 'claude' | 'apple' | 'offline';
   error?: boolean;
 }
 
@@ -106,7 +107,7 @@ export const useGym = create<GymState>()(
         sessions: [],
         activeSessionId: null,
         prefs: DEFAULT_PREFS,
-        model: 'claude-opus-5-5',
+        model: 'apple',
         speakReplies: false,
         chat: [],
         apiMessages: [],
@@ -164,7 +165,9 @@ export const useGym = create<GymState>()(
     },
     {
       name: 'gymhub',
-      version: 1,
+      version: 2,
+      // v1 defaulted to Claude; Apple's on-device model is the default from v2.
+      migrate: (state, version) => (version < 2 ? { ...(state as object), model: 'apple' } : state) as GymState,
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (s) => ({
         sessions: s.sessions,
