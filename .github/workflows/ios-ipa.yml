@@ -99,6 +99,80 @@ jobs:
           path: GymHub.ipa
           if-no-files-found: error
 
+  smoke-test:
+    name: Launch on the iOS Simulator
+    # Same toolchain as the device build, so a crash on launch shows up here first.
+    runs-on: xcode-27
+    timeout-minutes: 60
+    env:
+      CI: 1
+      EXPO_NO_TELEMETRY: 1
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Generate the iOS project
+        run: |
+          command -v pod >/dev/null || brew install cocoapods
+          npx expo prebuild --platform ios
+
+      - name: Build for the simulator
+        run: |
+          set -o pipefail
+          if command -v xcbeautify >/dev/null; then FMT="xcbeautify --quieter"; else FMT=cat; fi
+          xcodebuild build \
+            -workspace ios/GymHub.xcworkspace \
+            -scheme GymHub \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/dd" \
+            2>&1 | $FMT
+
+      - name: Launch and check it stays up
+        run: |
+          APP=$(find "$RUNNER_TEMP/dd/Build/Products" -maxdepth 2 -name GymHub.app | head -1)
+          UDID=$(xcrun simctl list devices available -j | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print([x['udid'] for k in sorted(d, reverse=True) for x in d[k] if 'iPhone' in x['name']][0])")
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" "$APP"
+          touch "$RUNNER_TEMP/start"
+          xcrun simctl launch --console-pty "$UDID" com.gymhub.app > "$RUNNER_TEMP/console.log" 2>&1 &
+          LAUNCH=$!
+          sleep 45
+          echo "::group::App console"; tail -200 "$RUNNER_TEMP/console.log"; echo "::endgroup::"
+          echo "::group::System log for GymHub"
+          xcrun simctl spawn "$UDID" log show --last 3m --style compact --predicate 'process == "GymHub"' | grep -iE "error|exception|fatal|crash|abort|terminat" | tail -150
+          echo "::endgroup::"
+          # The launch command only returns when the app exits, so still running means it survived.
+          if kill -0 "$LAUNCH" 2>/dev/null; then
+            echo "GymHub is still running after 45 s"
+            kill "$LAUNCH"
+          else
+            echo "::error::GymHub exited during launch"
+            for f in $(find ~/Library/Logs/DiagnosticReports -newer "$RUNNER_TEMP/start" -name 'GymHub*' 2>/dev/null); do
+              echo "::group::$f"; head -c 30000 "$f"; echo; echo "::endgroup::"
+            done
+            exit 1
+          fi
+
+  release:
+    name: Publish release
+    needs: [build, smoke-test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: GymHub-ipa
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
