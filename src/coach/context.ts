@@ -3,6 +3,7 @@ import { formatCardioTotals, formatDate, formatDuration, formatMinutes, formatSe
 import { cardioHistory, exerciseHistory, maxIncline, maxSpeed, sessionDurationMin, topSet } from '@/lib/stats';
 import type { CardioActivity, Prefs, Session, WorkoutState } from '@/lib/types';
 import { activeSession } from '@/lib/workout';
+import { liveHeartRate } from '@/store/heart-rate';
 
 function describeSession(s: Session, prefs: Prefs, detailed: boolean): string[] {
   const lines: string[] = [];
@@ -40,6 +41,8 @@ export function buildAppState(state: WorkoutState, prefs: Prefs, now = Date.now(
     `Now: ${formatDate(now)}, ${formatTime(now)}`,
     `Units: weights in ${prefs.weightUnit}, speeds in ${speed}, distances in ${prefs.distanceUnit}. Body weight ${prefs.bodyWeightKg} kg.`,
   ];
+  const bpm = liveHeartRate(now);
+  if (bpm) lines.push(`Heart rate right now: ${bpm} bpm (live from their strap).`);
   const active = activeSession(state);
   if (active) {
     lines.push(

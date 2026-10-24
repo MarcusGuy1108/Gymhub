@@ -34,7 +34,13 @@
           "imageWidth": 120
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "react-native-ble-manager",
+        {
+          "bluetoothAlwaysPermission": "GymHub reads live heart rate from your Whoop or other Bluetooth heart-rate strap."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

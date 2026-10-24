@@ -11,6 +11,7 @@ Type or dictate what you're doing between sets — *"bench 80kg x 8"*, *"current
 - **Workout tab.** A Hevy-style manual logger with exercise cards, an add-set row, cardio cards with live update and finish controls, and a session timer.
 - **History and progress.** Every session, plus per-exercise history with best estimated 1RM, heaviest set and a progress chart.
 - **Free, private AI by default.** Apple Intelligence's on-device model reads your messages, so nothing leaves the phone and it works offline. You can switch to Claude in Settings for smarter coaching. If neither is available, a built-in parser handles the common phrasings.
+- **Live heart rate.** Turn on *Live heart rate* in Settings to read your Whoop, or any Bluetooth heart-rate strap, while you train. It shows in the workout banner, gets saved with your cardio updates, and the coach can see it. It works alongside the noop app.
 - **Hands-free.** Tap the 🎤 on the iOS keyboard to talk, and turn on *Read replies aloud* in Settings.
 - kg or lb, km or miles, light and dark mode. Data stays on your phone and can be exported as JSON.
 

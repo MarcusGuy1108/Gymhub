@@ -8,6 +8,7 @@ import { Button, Card, Field, SectionHeader, Segmented, confirm } from '@/compon
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { MODELS, useGym } from '@/store/gym';
+import { connectHeartRate, disconnectHeartRate, useHeartRate } from '@/store/heart-rate';
 import { getApiKey, setApiKey } from '@/store/secure';
 
 export default function SettingsScreen() {
@@ -19,6 +20,9 @@ export default function SettingsScreen() {
   const setModel = useGym((s) => s.setModel);
   const speak = useGym((s) => s.speakReplies);
   const setSpeak = useGym((s) => s.setSpeakReplies);
+  const hrOn = useGym((s) => s.heartRateMonitor);
+  const setHrOn = useGym((s) => s.setHeartRateMonitor);
+  const hr = useHeartRate();
   const sessions = useGym((s) => s.sessions);
   const clearChat = useGym((s) => s.clearChat);
   const resetAll = useGym((s) => s.resetAll);
@@ -102,6 +106,33 @@ export default function SettingsScreen() {
           </View>
           <Switch value={speak} onValueChange={setSpeak} trackColor={{ true: theme.accent }} />
         </View>
+      </Card>
+
+      <Card>
+        <View style={styles.row}>
+          <View style={styles.flex}>
+            <ThemedText type="heading">Live heart rate</ThemedText>
+            <ThemedText type="small" themeColor={hr.status === 'error' ? 'danger' : 'textSecondary'}>
+              {hr.status === 'connected'
+                ? `${hr.device} · ${hr.bpm ?? '–'} bpm`
+                : hr.status === 'searching'
+                  ? 'Looking for your strap…'
+                  : hr.status === 'error'
+                    ? hr.error
+                    : 'Reads your Whoop or any Bluetooth heart-rate strap. Works alongside noop.'}
+            </ThemedText>
+          </View>
+          <Switch
+            value={hrOn}
+            onValueChange={(on) => {
+              setHrOn(on);
+              if (on) connectHeartRate();
+              else disconnectHeartRate();
+            }}
+            trackColor={{ true: theme.accent }}
+          />
+        </View>
+        {hrOn && hr.status === 'error' ? <Button title="Try again" kind="secondary" compact onPress={connectHeartRate} /> : null}
       </Card>
 
       <SectionHeader title="Units" />

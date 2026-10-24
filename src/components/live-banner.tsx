@@ -9,6 +9,7 @@ import { formatMinutes, formatSegmentSettings } from '@/lib/format';
 import { currentSegment, summarizeSession } from '@/lib/stats';
 import type { CardioEntry } from '@/lib/types';
 import { useActiveSession, useGym } from '@/store/gym';
+import { liveHeartRate } from '@/store/heart-rate';
 
 import { ThemedText } from './themed-text';
 import { Icon } from './ui';
@@ -27,6 +28,8 @@ export function LiveBanner() {
   const bits = [formatMinutes((now - session.startedAt) / 60000)];
   if (sum.sets) bits.push(`${sum.sets} set${sum.sets === 1 ? '' : 's'}`);
   if (sum.cardioMin && !running) bits.push(`${Math.round(sum.cardioMin)} min cardio`);
+  const bpm = liveHeartRate(now);
+  if (bpm) bits.push(`♥ ${bpm}`);
 
   return (
     <Pressable onPress={() => router.navigate('/workout')} style={({ pressed }) => [styles.wrap, pressed && { opacity: 0.7 }]}>

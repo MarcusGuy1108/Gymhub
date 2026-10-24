@@ -2,11 +2,13 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useSyncExternalStore } from 'react';
+import { AppState } from 'react-native';
 
 import AppTabs from '@/components/app-tabs';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useGym } from '@/store/gym';
+import { connectHeartRate } from '@/store/heart-rate';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -31,6 +33,15 @@ export default function RootLayout() {
   useEffect(() => {
     if (hydrated) SplashScreen.hideAsync().catch(() => {});
   }, [hydrated]);
+
+  // Reconnect the heart-rate strap on launch and whenever the app comes back to the foreground.
+  const heartRateMonitor = useGym((s) => s.heartRateMonitor);
+  useEffect(() => {
+    if (!hydrated || !heartRateMonitor) return;
+    connectHeartRate();
+    const sub = AppState.addEventListener('change', (state) => state === 'active' && connectHeartRate());
+    return () => sub.remove();
+  }, [hydrated, heartRateMonitor]);
 
   if (!hydrated) return null;
   return (

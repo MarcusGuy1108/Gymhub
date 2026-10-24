@@ -17,6 +17,8 @@ import {
   type LogChip,
 } from '@/lib/workout';
 
+import { liveHeartRate } from './heart-rate';
+
 export type ModelId = 'apple' | 'claude-opus-5-5' | 'claude-sonnet-5-5' | 'claude-haiku-5-5';
 
 export const MODELS: { id: ModelId; label: string; blurb: string }[] = [
@@ -47,6 +49,8 @@ interface GymState extends WorkoutState {
   prefs: Prefs;
   model: ModelId;
   speakReplies: boolean;
+  /** Stream live heart rate from a Bluetooth strap (e.g. Whoop) */
+  heartRateMonitor: boolean;
   chat: ChatMessage[];
   /** Claude conversation transcript (append-only, reset per gym visit) */
   apiMessages: BetaMessageParam[];
@@ -67,6 +71,7 @@ interface GymState extends WorkoutState {
   setPrefs: (p: Partial<Prefs>) => void;
   setModel: (m: ModelId) => void;
   setSpeakReplies: (v: boolean) => void;
+  setHeartRateMonitor: (v: boolean) => void;
   resetAll: () => void;
 }
 
@@ -109,11 +114,15 @@ export const useGym = create<GymState>()(
         prefs: DEFAULT_PREFS,
         model: 'apple',
         speakReplies: false,
+        heartRateMonitor: false,
         chat: [],
         apiMessages: [],
         undoStack: [],
 
         dispatch: (action, now = Date.now()) => {
+          // Stamp the strap's live reading onto cardio updates that don't carry one.
+          const bpm = liveHeartRate(now);
+          if (bpm && action.type === 'cardio_update' && action.heartRate == null) action = { ...action, heartRate: bpm };
           const result = applyAction(workout(get()), action, { now, prefs: get().prefs });
           if (result.ok) commit(result.state);
           return result;
@@ -159,6 +168,7 @@ export const useGym = create<GymState>()(
         setPrefs: (p) => set({ prefs: { ...get().prefs, ...p } }),
         setModel: (model) => set({ model }),
         setSpeakReplies: (speakReplies) => set({ speakReplies }),
+        setHeartRateMonitor: (heartRateMonitor) => set({ heartRateMonitor }),
         resetAll: () =>
           set({ sessions: [], activeSessionId: null, chat: [], apiMessages: [], undoStack: [], prefs: DEFAULT_PREFS }),
       };
@@ -175,6 +185,7 @@ export const useGym = create<GymState>()(
         prefs: s.prefs,
         model: s.model,
         speakReplies: s.speakReplies,
+        heartRateMonitor: s.heartRateMonitor,
         chat: s.chat,
         apiMessages: s.apiMessages,
       }),
